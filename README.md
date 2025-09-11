@@ -4,7 +4,7 @@
     <img alt="Microchip Logo." src="images/microchip_logo_black_red.png">
 </picture>
 
-## dspic bootloader mdfu
+## dsPIC Bootloader MDFU Code Examples
 
 Board Image if any.
 
