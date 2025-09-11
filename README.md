@@ -16,7 +16,7 @@ An example bootloader using the Microchip Device Firmware Update (MDFU) protocol
 ### Related Documentation
 * [dsPIC33AK128MC106 DIM (EV02G02A)](https://www.microchip.com/en-us/development-tool/ev02g02a)
 * [Curiosity Platform Development Board (EV74H48A)](https://www.microchip.com/en-us/development-tool/ev74h48a)
-* [MDFU Protocol](https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SupportingCollateral/Microchip-Device-Firmware-Update-MDFU-Protocol-DS50003743.pdf)
+* [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
 See [crc_uart_1_image](crc_uart_1_image/) and the associated [README.md](crc_uart_1_image/README.md) files for details on the required hardware, software, setup, and how to run the demo.
@@ -30,7 +30,7 @@ An example secure bootloader using the Microchip Device Firmware Update (MDFU) p
 
 ### Related Documentation
 * [Curiosity Platform Development Board (EV74H48A)](https://www.microchip.com/en-us/development-tool/ev74h48a)
-* [MDFU Protocol](https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SupportingCollateral/Microchip-Device-Firmware-Update-MDFU-Protocol-DS50003743.pdf)
+* [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
 See [secure_boot_uart_2_images](secure_boot_uart_2_images/) and the associated [README.md](secure_boot_uart_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
@@ -44,7 +44,7 @@ An example secure bootloader using the Microchip Device Firmware Update (MDFU) p
 
 ### Related Documentation
 * [Curiosity Platform Development Board (EV74H48A)](https://www.microchip.com/en-us/development-tool/ev74h48a)
-* [MDFU Protocol](https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SupportingCollateral/Microchip-Device-Firmware-Update-MDFU-Protocol-DS50003743.pdf)
+* [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
 See [secure_boot_can_2_images](secure_boot_can_2_images/) and the associated [README.md](secure_boot_can_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
