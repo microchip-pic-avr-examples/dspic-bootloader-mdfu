@@ -24,7 +24,7 @@ See [crc_uart_1_image](./dspic33a/crc_uart_1_image/) and the associated [README.
 ## <u>dsPIC33A Multi-Image ECDSA UART Boot Demo</u>
 
 ### Summary
-An example secure bootloader using the Microchip Device Firmware Update (MDFU) protocol and UART peripheral on the Curiosity Platform Development Board with a dsPIC33AK512MPS512 DIM demonstrating the following: 
+An example secure bootloader using the Microchip Device Firmware Update (MDFU) protocol and UART peripheral on the Curiosity Platform Development Board with a dsPIC33AK512MPS512 DIM demonstrating the following:
 * Secure firmware update via UART using Microchip Device Firmware Update (MDFU) protocol 
 * Application verification checking using Elliptic Curve Digital Signature Algorithm (ECDSA) with P\-384
 
