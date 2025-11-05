@@ -26,7 +26,7 @@ See [crc_uart_1_image](./dspic33a/crc_uart_1_image/) and the associated [README.
 ### Summary
 An example secure bootloader using the Microchip Device Firmware Update (MDFU) protocol and UART peripheral on the Curiosity Platform Development Board with a dsPIC33AK512MPS512 DIM demonstrating the following: 
 * Secure firmware update via UART using Microchip Device Firmware Update (MDFU) protocol 
-* Application verification checking using Elliptic Curve Digital Signature Algorithm (ECDSA) with P-384
+* Application verification checking using Elliptic Curve Digital Signature Algorithm (ECDSA) with P\-384
 
 ### Related Documentation
 * [Curiosity Platform Development Board (EV74H48A)](https://www.microchip.com/en-us/development-tool/ev74h48a)
@@ -40,7 +40,7 @@ See [secure_boot_uart_2_images](./dspic33a/secure_boot_uart_2_images/) and the a
 ### Summary
 An example secure bootloader using the Microchip Device Firmware Update (MDFU) protocol and CAN-FD peripheral on the Curiosity Platform Development Board with a dsPIC33AK512MPS512 DIM demonstrating the following: 
 * Secure firmware update via CAN-FD using Microchip Device Firmware Update (MDFU) protocol 
-* Application verification checking using Elliptic Curve Digital Signature Algorithm (ECDSA) with P-384
+* Application verification checking using Elliptic Curve Digital Signature Algorithm (ECDSA) with P\-384
 
 ### Related Documentation
 * [Curiosity Platform Development Board (EV74H48A)](https://www.microchip.com/en-us/development-tool/ev74h48a)
