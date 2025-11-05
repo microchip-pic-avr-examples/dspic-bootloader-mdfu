@@ -19,7 +19,7 @@ An example bootloader using the Microchip Device Firmware Update (MDFU) protocol
 * [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
-See [crc_uart_1_image](crc_uart_1_image/) and the associated [README.md](crc_uart_1_image/README.md) files for details on the required hardware, software, setup, and how to run the demo.
+See [crc_uart_1_image](./dspic33a/crc_uart_1_image/) and the associated [README.md](./dspic33a/crc_uart_1_image/README.md) files for details on the required hardware, software, setup, and how to run the demo.
 
 ## <u>dsPIC33A Multi-Image ECDSA UART Boot Demo</u>
 
@@ -33,7 +33,7 @@ An example secure bootloader using the Microchip Device Firmware Update (MDFU) p
 * [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
-See [secure_boot_uart_2_images](secure_boot_uart_2_images/) and the associated [README.md](secure_boot_uart_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
+See [secure_boot_uart_2_images](./dspic33a/secure_boot_uart_2_images/) and the associated [README.md](./dspic33a/secure_boot_uart_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
 
 ## <u>dsPIC33A Multi-Image ECDSA CAN Boot Demo</u>
 
@@ -47,7 +47,7 @@ An example secure bootloader using the Microchip Device Firmware Update (MDFU) p
 * [MDFU Protocol](http://www.microchip.com/DS50003743)
 
 ### Setup And Operation
-See [secure_boot_can_2_images](secure_boot_can_2_images/) and the associated [README.md](secure_boot_can_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
+See [secure_boot_can_2_images](./dspic33a/secure_boot_can_2_images/) and the associated [README.md](./dspic33a/secure_boot_can_2_images/README.md) files for details on the required hardware, software, setup, and how to run the demo.
 
 
 
