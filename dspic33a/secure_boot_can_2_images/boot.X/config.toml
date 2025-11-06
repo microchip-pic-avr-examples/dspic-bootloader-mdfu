@@ -1,0 +1,74 @@
+[pcan_500k_2M]
+# CAN 500 Kbps nominal bit rate/2 Mbps data bit rate configuration 
+
+# Should the Bus be initialized in CAN-FD mode
+fd = true
+
+# Tool interface name
+interface = "pcan"
+
+# The can interface name. Default is ‘PCAN_USBBUS1’
+channel = "PCAN_USBBUS1"
+
+# Clock rate in MHz
+f_clock_mhz = 80
+
+# Clock prescaler for nominal time quantum
+nom_brp = 1
+
+# Time segment 1 for nominal bit rate
+nom_tseg1 = 139
+
+# Time segment 2 for nominal bit rate
+nom_tseg2 = 20
+
+# Synchronization Jump Width for nominal bit rate
+nom_sjw = 1
+
+# Clock prescaler for fast data time quantum
+data_brp = 1
+
+# Time segment 1 for fast data bit rate
+data_tseg1 = 31
+
+# Time segment 2 for fast data bit rate
+data_tseg2 = 8
+
+# Synchronization Jump Width for fast data bit rate
+data_sjw = 1
+
+[isotp]
+# ISO CAN TP configuration
+
+# The single-byte Separation Time
+stmin = 0
+
+# The single-byte Block Size (number of consecutive frames before flow control)
+blocksize = 0
+
+# Maximum number of bytes in a single CAN message
+tx_data_length = 8
+
+# Minimum length of CAN messages.
+# tx_data_min_length = 1
+
+# Milliseconds to wait for a flow control frame before timeout
+rx_flowcontrol_timeout = 1000
+
+# Milliseconds to wait for a consecutive frame before timeout
+rx_consecutive_frame_timeout = 1000
+
+# Byte used for padding messages sent. If not configured no padding is done.
+# tx_padding = 0x00
+
+# Single-byte Wait Frame Max (0 = wait frames not supported)
+wftmax = 3
+
+# Maximum frame length accepted (protection against memory issues)
+max_frame_size = 4095
+
+# Use CAN FD (true/false)
+can_fd = true
+
+# Use bitrate switch for CAN FD (true/false)
+bitrate_switch = true

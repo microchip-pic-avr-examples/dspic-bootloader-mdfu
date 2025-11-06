@@ -1,0 +1,262 @@
+/*
+Copyright (c) [2012-2024] Microchip Technology Inc.  
+
+    All rights reserved.
+
+    You are permitted to use the accompanying software and its derivatives 
+    with Microchip products. See the Microchip license agreement accompanying 
+    this software, if any, for additional info regarding your rights and 
+    obligations.
+    
+    MICROCHIP SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT 
+    WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT 
+    LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, NON-INFRINGEMENT 
+    AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP OR ITS
+    LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT, NEGLIGENCE, STRICT 
+    LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER LEGAL EQUITABLE 
+    THEORY FOR ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING BUT NOT 
+    LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES, 
+    OR OTHER SIMILAR COSTS. 
+    
+    To the fullest extend allowed by law, Microchip and its licensors 
+    liability will not exceed the amount of fees, if any, that you paid 
+    directly to Microchip to use this software. 
+    
+    THIRD PARTY SOFTWARE:  Notwithstanding anything to the contrary, any 
+    third party software accompanying this software is subject to the terms 
+    and conditions of the third party's license agreement.  To the extent 
+    required by third party licenses covering such third party software, 
+    the terms of such license will apply in lieu of the terms provided in 
+    this notice or applicable license.  To the extent the terms of such 
+    third party licenses prohibit any of the restrictions described here, 
+    such restrictions will not apply to such third party software.
+*/
+
+#include <stdbool.h>
+#include <stdint.h>
+#include "ram_execution.h"
+#include "mdfu_boot_demo.h"
+#include "mdfu_verification.h"
+#include "mdfu_command_processor.h"
+#include "mdfu_firmware_update.h"
+#include "mdfu_transport.h"
+#include "mdfu_partition.h"
+#include "mdfu_partition_header.h"
+#include "mdfu_recovery_authorization.h"
+#include "mdfu_partition_executable.h"
+#include "mdfu_partition_boot.h"
+#include "mdfu_config.h"
+#include "critical_region.h"
+#include "s3.h"
+#include "led0.h"
+#include "led1.h"
+#include "../mcc_generated_files/uart/uart1.h"
+
+#ifdef __XC__
+#include <xc.h>
+#endif
+
+#if (MDFU_BOOT_ENTRY_KEY == 0)
+    #error "0 is an invalid boot entry key value."
+#endif
+
+static enum MDFU_COMMAND_RESULT status = MDFU_COMMAND_SESSION_WAITING;
+
+#ifdef __XC__
+static uint32_t bootEntryKey __attribute__((persistent, address(MDFU_BOOT_ENTRY_KEY_ADDRESS)));
+#endif
+
+static bool UserRequestedFirmwareUpdate(void);
+static bool ExecutableLaunch(void);
+static void RAMExecutionDisable(void);
+static void BootEntryRequestClear(void);
+static bool BootEntryIsRequested(void);
+static void PeripheralDeinitialize(void);
+
+enum BOOT_STATE {
+    BOOT_STATE_RESET,
+    BOOT_STATE_BOOTING,
+    BOOT_STATE_INSTALL_UPGRADE,
+    BOOT_STATE_FIRMWARE_UPDATE_MODE
+};
+
+static enum BOOT_STATE state = BOOT_STATE_RESET;
+
+#if defined(__XC__) && !defined(RESET)
+static void Reset(void) {
+#ifdef __DEBUG
+    /* If we are in debug mode, cause a software breakpoint in the debugger */
+    __builtin_software_breakpoint();
+    while (1) {
+        // Infinite loop after breakpoint
+    }
+#else
+    // Trigger software reset
+    __asm__ volatile ("reset");
+#endif
+}
+#else
+extern void Reset(void);
+#endif
+
+
+void MDFU_BootDemoInitialize(void)
+{ 
+    RAMExecutionDisable();
+    
+    /* Lock the boot partition as executable only. This is important if not
+     * using the IRT option to make sure that executable code is unable to
+     * write to the boot partition. */    
+    if(boot.modeChange(MDFU_PARTITION_MODE_EXECUTABLE & MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_LOCKED) != MDFU_PARTITION_STATUS_SUCCESS)
+    {
+        Reset();
+    }
+            
+    status = MDFU_COMMAND_SESSION_WAITING;
+    state = BOOT_STATE_RESET;
+    LED0_Initialize();
+    
+    BUTTON_S3_Initialize();
+    MDFU_CommandInitialize();
+}
+
+void MDFU_BootDemoTasks(void)
+{
+    switch(state)
+    {
+        case BOOT_STATE_RESET:
+            if(UserRequestedFirmwareUpdate() == true) 
+            {
+                state = BOOT_STATE_FIRMWARE_UPDATE_MODE;
+            }
+            else
+            {
+                state = BOOT_STATE_BOOTING;
+            }
+            break;
+        case BOOT_STATE_BOOTING:
+            if(ExecutableLaunch() == false)
+            {
+                state = BOOT_STATE_FIRMWARE_UPDATE_MODE;
+            }
+            break;
+        case BOOT_STATE_FIRMWARE_UPDATE_MODE:
+        default:    
+            LED0_On();
+            status = MDFU_CommandProcess();
+            
+            /* If we have completed an update, reset the hardware and attempt
+             * to boot the image.  
+             *
+             * If we have failed an update, reset and attempt to recover.
+             */
+            if ((status == MDFU_COMMAND_SESSION_COMPLETE) ||
+                (status == MDFU_COMMAND_SESSION_FAILED))
+            {
+                //Next state if failed BOOT_STATE_RESET
+                Reset();
+            }
+            break;
+    }
+}
+
+bool MDFU_BootIsInstallationAllowed(void)
+{
+    return true;
+}
+
+static bool UserRequestedFirmwareUpdate(void)
+{
+    bool executableRequestedBootEntry = BootEntryIsRequested();
+    
+    /* We have recorded the executable's request to enter boot mode above,
+     * clear the entry key so that the next reset will return to the 
+     * executable regardless.
+     */
+    BootEntryRequestClear();
+    
+    #warning "Update this function to return 'true' when you want to stay in the boot loader, and 'false' when you want to allow a release to the executable code"
+ 
+    /* NOTE: This might be a a push button status on power up, a command from a peripheral, 
+     * or whatever is specific to your boot loader implementation */    
+
+    return BUTTON_S3_IsPressed() || executableRequestedBootEntry;
+}
+
+static bool ExecutableLaunch(void)
+{       
+    if (MDFU_Verify(&executable) == MDFU_VERIFY_CODE_SUCCESS) 
+    {
+        /* Make the executable partition executable, readable, write protected, and locked. */
+        if (executable.modeChange(MDFU_PARTITION_MODE_EXECUTABLE & MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_LOCKED) == MDFU_PARTITION_STATUS_SUCCESS) 
+        {
+            /* Make sure all peripheral interrupts and global interrupts used by the bootloader are restored to hardware defaults. */
+            PeripheralDeinitialize();
+            executable.run();
+        }
+        //If the application fails to launch correctly then reset to the bootloader to attempt recovery.
+        Reset();
+    } 
+    
+    return false;
+}
+
+static void RAMExecutionDisable(void)
+{
+    CRITICAL_REGION_Begin();
+
+   /* RAM execution is disabled at this point to prevent the risk of unauthenticated code execution.
+    * If your application requires execution from RAM, ensure that all data loaded into RAM is properly
+    * authenticated to maintain the Chain of Trust?verifying that all executed code has been authenticated.
+    *
+    * The BMXIRAML and BMXIRAMH registers specify the lower (inclusive) and upper (exclusive) boundary
+    * addresses for instruction RAM. Setting both registers to the same value effectively disables RAM execution.
+    * To enforce this configuration, the BMXIRAMLLK and BMXIRAMHLK lock registers are set to 1. Please note
+    * that these locks remain active until the next device reset and cannot be cleared via software.
+    */
+    RAM_EXECUTION_Disable();
+    RAM_EXECUTION_Lock();
+
+    // If RAM execution disable or lock fails reset.
+    if((RAM_EXECUTION_IsDisabled() == false) || (RAM_EXECUTION_IsLocked() == false))
+    {
+        Reset();
+    }
+    
+    CRITICAL_REGION_End();
+}
+
+static bool BootEntryIsRequested(void)
+{
+    return (MDFU_BOOT_ENTRY_KEY == bootEntryKey);
+}
+
+static void BootEntryRequestClear(void)
+{
+    bootEntryKey = 0;
+}
+
+static void PeripheralDeinitialize(void)
+{
+    CRITICAL_REGION_Begin(); 
+    #warning "All interrupt sources and peripherals should be disabled before starting the application.  Add any code required here to disable all interrupts and peripherals used in the bootloader."
+    /* NOTE: Before starting the application, all interrupts used
+    * by the bootloader must be disabled. Add code here to return
+    * the peripherals/interrupts to the reset state before starting
+    * the application code. Just disabling the global interrupt bit
+    * is not enough. The global interrupt enable bit resets to 
+    * enabled, so should be re-enabled while starting the 
+    * application. Clear all peripheral interrupt enable and 
+    * interrupt flags. Most peripheral interrupt bits are disabled 
+    * on reset. All of these should be disabled before starting the 
+    * application. Keep in mind that some software stacks may
+    * pull in and enable additional peripherals (e.g. - timers). 
+    * All peripheral control registers should be returned to as close
+    * to the reset state as possible, call the PERIPHERAL_Deinitialize()
+    * if available. 
+    */
+    
+    UART1_Deinitialize();
+    
+    CRITICAL_REGION_End();
+}
