@@ -3,14 +3,14 @@
     "category": "com.microchip.ide.project",
     "content": {
         "metaDataVersion": "1.3.0",
-        "name": "com.microchip.mplabx.project.dspic33a-multi-image-ecdsa-uart-boot-demo",
+        "name": "com.microchip.mplabx.project.dspic33a-multi-image-pqc-ecdsa-hybrid-uart-boot-demo",
         "version": "1.1.0",
-        "displayName": "dsPIC33A Multi-Image ECDSA UART Boot Demo",
-        "projectName": "dspic33a-multi-image-ecdsa-uart-boot-demo",
-        "shortDescription": "This MPLAB® X IDE example demonstrates how to perform secure boot authentication and secure firmware upgrade via UART with Microchip Device Firmware Update Protocol (MDFU) and ECDSA with P-384 verification within MCC Melody.",
+        "displayName": "dsPIC33A Multi-Image PQC ECDSA Hybrid UART Boot Demo",
+        "projectName": "dspic33a-multi-image-pqc-ecdsa-hybrid-uart-boot-demo",
+        "shortDescription": "This MPLAB® X IDE example demonstrates how to perform secure boot authentication and secure firmware upgrade via UART with Microchip Device Firmware Update Protocol (MDFU) and hybrid verification using ML-DSA and ECDSA within MCC Melody.",
         "ide": {
             "name": "MPLABX",
-            "semverRange": ">=6.25.0"
+            "semverRange": ">=6.30.0"
         },
         "compiler": {
             "name": "XCDSC",
@@ -18,7 +18,7 @@
         },
         "dfp": {
             "name": "dsPIC33AK-MP_DFP",
-            "semverRange": ">=1.0.81"
+            "semverRange": ">=1.2.135"
         },
         "configurator": {
             "name": "MCC",
@@ -41,6 +41,7 @@
             "Board",
             "Bootloader",
             "Bootloader Client",
+            "CAN FD",
             "Certificate",
             "Code Protection",
             "Communication",
@@ -87,9 +88,6 @@
             "SHA",
             "SHA-256",
             "Software",
-            "UART",
-            "UART Protocol",
-            "Virtual COM Port",
             "Wired",
             "XC16",
             "XC-DSC"
