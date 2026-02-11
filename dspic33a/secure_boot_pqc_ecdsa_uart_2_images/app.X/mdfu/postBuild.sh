@@ -180,7 +180,7 @@ echo ..............................
 python3 bin_tool.py inject_from_config --config postBuildConfig.json --projectDir "$projectDir" --imageDir "$imageDir"
 
 # Fill zeros in the padding between the signatures and the header. Padding required to force the header/code to align as required for IVT.
-python3 fill.zeros.py --file "$projectDir/$imageDir/signed_image.bin" --config postBuildConfig.json || Error
+python3 fill_zeros.py --file "$projectDir/$imageDir/signed_image.bin" --config postBuildConfig.json || Error
 
 echo Fully signed image generated: "$projectDir/$imageDir/signed_image.bin"
 
