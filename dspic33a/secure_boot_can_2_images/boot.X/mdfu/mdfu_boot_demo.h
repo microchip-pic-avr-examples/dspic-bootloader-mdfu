@@ -37,6 +37,16 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 
 #include <stdbool.h>
 
+enum MDFU_BOOT_STATE {
+    MDFU_BOOT_STATE_RESET,
+    MDFU_BOOT_STATE_BOOTING,
+    MDFU_BOOT_STATE_RECOVER_FROM_DOWNLOAD,
+    MDFU_BOOT_STATE_INSTALL_UPGRADE,
+    MDFU_BOOT_STATE_FIRMWARE_UPDATE_MODE
+};
+
+enum MDFU_BOOT_STATE MDFU_BootStateGet(void);
+
 void MDFU_BootDemoInitialize(void);
 void MDFU_BootDemoTasks(void);
 bool MDFU_BootIsInstallationAllowed(void);

@@ -94,14 +94,54 @@ void __attribute__((interrupt)) _CRYPTO2Interrupt(void)
     _CRYPT2IF = 0;
 }
 
+static void (*CRYPTO3_SignOperationCompleteHandler)(void);
+static void (*CRYPTO3_VerifyOperationCompleteHandler)(void);
+static crypto_operation_Id (*CRYPTO3_OperationTypeHandler)(void);
+
 void __attribute__((interrupt)) _CRYPTO3Interrupt(void)
 {
     if (cryptoIntHandlers.handlers[CRYPTO3_INT] != NULL)
     {
         cryptoIntHandlers.handlers[CRYPTO3_INT]();
     }
+    if(CRYPTO3_OperationTypeHandler != NULL)
+    {
+        if ((CRYPTO3_SignOperationCompleteHandler != NULL) && (CRYPTO3_OperationTypeHandler() == ECDSA_SIGN))
+        {
+            (*CRYPTO3_SignOperationCompleteHandler)();
+        }
 
+        if ((CRYPTO3_VerifyOperationCompleteHandler != NULL) && (CRYPTO3_OperationTypeHandler() == ECDSA_VERIFY))
+        {
+            (*CRYPTO3_VerifyOperationCompleteHandler)();
+        }
+    }
+    
     _CRYPT3IF = 0;
+}
+
+void CRYPTO_Int_Hw_SignComplete_CallbackRegister(void (*handler)(void))
+{
+    if (NULL != handler)
+    {
+       CRYPTO3_SignOperationCompleteHandler = handler;
+    }
+}
+
+void CRYPTO_Int_Hw_VerifyComplete_CallbackRegister(void (*handler)(void))
+{
+    if (NULL != handler)
+    {
+       CRYPTO3_VerifyOperationCompleteHandler = handler;
+    }
+}
+
+void CRYPTO_Int_Hw_OperationTypeHandlerRegister(crypto_operation_Id (*handler)(void))
+{
+    if (NULL != handler)
+    {
+       CRYPTO3_OperationTypeHandler  = handler;
+    }
 }
 
 // *****************************************************************************

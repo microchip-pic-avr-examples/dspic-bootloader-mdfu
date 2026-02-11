@@ -20,18 +20,7 @@ MissingPython()
 }
 
 # ------------------------------------
-# Function: MissingOpenSSL
-# 
-# Description: Prints out a message with RED background that OpenSSL is not installed and exits the script.
-# ------------------------------------
-MissingOpenSSL() 
-{
-    echo $red OpenSSL was not found! Install OpenSSL, add it to the system path, and close/reopen MPLAB X. $reset
-    echo $red For OpenSSL installs please check https://wiki.openssl.org/index.php/Binaries $reset
-    exit 1
-}
 
-# ------------------------------------
 # Function: Error
 # 
 # Description: Prints out a message with RED background that an error has occurred while generating the keystore files and exits the script.
@@ -47,9 +36,8 @@ Error()
 # ====================================
 # Check that the required tools are installed
 python3 -V || MissingPython
-openssl version || MissingOpenSSL
+python3 verify_openssl.py || Error
 
-# If all required tools are present, create the required key/keystore files 
 
 # Creates the keystore and demo key pair if not already present 
 python3 create_demo_key_files.py || Error

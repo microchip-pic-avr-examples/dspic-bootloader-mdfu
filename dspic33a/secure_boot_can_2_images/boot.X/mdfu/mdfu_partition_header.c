@@ -43,7 +43,7 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #define LENGTH_OFFSET (TYPE_LENGTH)
 #define VALUE_OFFSET (TYPE_LENGTH + LENGTH_LENGTH)
 
-#define END_OF_HEADER_OFFSET (MDFU_CONFIG_MAX_HEADER_LENGTH + MDFU_CONFIG_HEADER_OFFSET)
+#define END_OF_HEADER_OFFSET (MDFU_CONFIG_HEADER_LENGTH + MDFU_CONFIG_HEADER_OFFSET)
 
 /**
  * @brief    Determines if we have reached the end of the header yet

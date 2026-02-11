@@ -45,6 +45,7 @@
         <itemPath>mdfu/mdfu_config.h</itemPath>
         <itemPath>mdfu/mdfu_partition.h</itemPath>
         <itemPath>mdfu/mdfu_partition_header.h</itemPath>
+        <itemPath>mdfu/mdfu_reset.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -57,6 +58,11 @@
         <itemPath>mdfu/postBuild.sh</itemPath>
         <itemPath>mdfu/signing_tool.py</itemPath>
         <itemPath>mdfu/update_header_value.py</itemPath>
+        <itemPath>mdfu/cleanup_temp_files.py</itemPath>
+        <itemPath>mdfu/fill_zeros.py</itemPath>
+        <itemPath>mdfu/postBuildConfig.json</itemPath>
+        <itemPath>mdfu/pre_sign_tool.py</itemPath>
+        <itemPath>mdfu/verify_openssl.py</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="prebuild" projectFiles="true">
         <itemPath>mdfu/preBuild.bat</itemPath>
@@ -113,6 +119,7 @@
         <itemPath>mdfu/mdfu_boot_entry.c</itemPath>
         <itemPath>mdfu/application_header.c</itemPath>
         <itemPath>mdfu/application_signature.c</itemPath>
+        <itemPath>mdfu/mdfu_reset.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
     </logicalFolder>

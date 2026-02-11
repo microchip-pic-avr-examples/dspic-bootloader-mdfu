@@ -23,16 +23,7 @@ echo %red% Python was not found! Install Python3, add it to the system path, and
 exit /b -1
 
 REM ------------------------------------
-REM Function: MissingOpenSSL
-REM 
-REM Description: Prints out a message with RED background that OpenSSL is not installed and exits the script.
-REM ------------------------------------
-:MissingOpenSSL
-echo %red% OpenSSL was not found! Install OpenSSL, add it to the system path, and close/reopen MPLAB X. %reset%
-echo %red% For OpenSSL installs please check https://wiki.openssl.org/index.php/Binaries %reset%
-exit /b -1
 
-REM ------------------------------------
 REM Function: Error
 REM 
 REM Description: Prints out a message with RED background that an error has occurred while generating the keystore files and exits the script.
@@ -47,13 +38,12 @@ REM ====================================
 :scriptStart
 
 REM Check that the required tools are installed
-python -V || goto MissingPython
-openssl version || goto MissingOpenSSL
+call python -V || goto MissingPython
+call python verify_openssl.py || goto Error
 
-REM If all required tools are present, create the required key/keystore files 
 
 REM Creates the keystore and demo key pair if not already present 
-python create_demo_key_files.py || goto Error
+call python create_demo_key_files.py || goto Error
 
 REM Generates the source code containing the key data as outlined in the keystore
-python generate_keystore.py || goto Error
+call python generate_keystore.py || goto Error

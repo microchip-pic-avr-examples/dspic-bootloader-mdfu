@@ -124,7 +124,7 @@ if __name__ == "__main__":
         update_header_parser.add_argument('--header_bin', help='The header .bin file that the new value will be written into.', required=True)
         update_header_parser.add_argument('--type_code', help='The type code of the header value to be updated.', type=lambda x: int(x,16), required=True)
         update_header_parser.add_argument('--value_bin', help='The new value in a .bin file format.', required=True)
-       
+
         args = parser.parse_args()
 
         if args.choice == 'update_header_value':

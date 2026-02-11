@@ -1,0 +1,14 @@
+{
+    "mplab.clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}\\_build\\boot\\default"
+    ],
+    "mplab.clangd.path": "c:\\Program Files\\Microchip\\xc-dsc\\v3.21\\bin\\xc-dsc-clangd.exe",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "memory-inspector.debugTypes": [
+        "arm-debugger",
+        "embedded-debug",
+        "gdb",
+        "mplab-core-da"
+    ],
+    "cmake.sourceDirectory": "C:/Users/C74569/mdfu/demos/dspic33a/secure_boot_uart_2_images/boot.X/cmake/boot/default"
+}

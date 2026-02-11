@@ -34,7 +34,6 @@ Copyright (c) [2025] Microchip Technology Inc.
 
 #include "mdfu_partition.h"
 #include "flash_region.h"
-#include "flash_region0.h"
 #include "mdfu_partition_boot.h"
 #include "critical_region.h"
 

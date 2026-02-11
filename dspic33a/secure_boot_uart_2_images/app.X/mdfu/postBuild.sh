@@ -55,7 +55,7 @@ export isDebug="$5"
 export reset="[0m"
 export cyan="[46m"
 export red="[41m"
-export private_key_path="../../boot.X/mdfu/keystore/private_key.pem"
+export p384_private_key_path="../../boot.X/mdfu/keystore/p384_private_key.pem"
 
 # ====================================
 # Functions
@@ -68,21 +68,11 @@ export private_key_path="../../boot.X/mdfu/keystore/private_key.pem"
 # ------------------------------------
 MissingPython() 
 {
-    echo $red Python was not found! Install Python3, add it to the system path, and close/reopen MPLAB X. $reset
+    echo "$red" Python was not found! Install Python3, add it to the system path, and close/reopen MPLAB X. "$reset"
     exit 1
 }
 
 # ------------------------------------
-# Function: MissingOpenSSL
-# 
-# Description: Prints out a message with RED background that OpenSSL is not installed and exits the script.
-# ------------------------------------
-MissingOpenSSL() 
-{
-    echo $red OpenSSL was not found! Install OpenSSL, add it to the system path, and close/reopen MPLAB X. $reset
-    echo $red For OpenSSL installs please check https://wiki.openssl.org/index.php/Binaries $reset
-    exit 1
-}
 
 # Function: MissingPrivateKey
 # 
@@ -92,8 +82,8 @@ MissingOpenSSL()
 # ------------------------------------
 MissingPrivateKey()
 {
-    echo $red The private key was not found! $reset
-    echo $red See the README.md at the root of this demo for additional details on key generation. $reset
+    echo "$red" The private key was not found! "$reset"
+    echo "$red" See the README.md at the root of this demo for additional details on key generation. "$reset"
     exit 1
 }
 
@@ -104,7 +94,7 @@ MissingPrivateKey()
 # ------------------------------------
 Error() 
 {
-    echo ${red} An error has occurred. The application header stuffing and signing process did not complete. $reset
+    echo "$red" An error has occurred. The application header stuffing and signing process did not complete. "$reset"
     rm "$projectDir/$imageDir/signed_image.bin"
     exit 1
 }
@@ -112,17 +102,17 @@ Error()
 # ====================================
 # Script Main
 # ====================================
-if [ $isDebug == "true" ]; then
+if [ "$isDebug" == "true" ]; then
     echo -e "$cyan NOTE: You have built in DEBUG mode, therefore a .hex file was not generated. If you would like to generate a .hex file, please build in production mode. For more information, please open MCC and click on the question mark symbol next to the 16-bit Bootloader Library under Resource Management. $reset"
     exit 0
 fi
 
 # Check that the required tools are installed
 python3 -V || MissingPython
-openssl version || MissingOpenSSL
+python3 verify_openssl.py || Error
 
-# Check that the private key is present 
-if ! [ -e $private_key_path ]; then
+# Check that the p384 private key is present
+if ! [ -e $p384_private_key_path ]; then
     MissingPrivateKey
 fi
 
@@ -135,26 +125,10 @@ if [ -e "$compilerDir/xc-dsc-objcopy" ]; then
     export OBJ_CPY="$compilerDir/xc-dsc-objcopy"
 fi
 
-# Fill in unimplemented memory locations in the application space 
-hexmate r80C000-0x845FFF,"$projectDir/$imageDir/$imageName" -O"$projectDir/$imageDir/filled.hex" -FILL=w1:0x00@0x80C000:0x845FFF || Error
-
-# generate a .hex file for just the header (offset to address 0)
-hexmate r80C060-0x80C1FFs-80C060,"$projectDir/$imageDir/filled.hex" -O"$projectDir/$imageDir/header.hex" || Error
-
-# Generate the binary file of the header
-$OBJ_CPY -I ihex -O binary "$projectDir/$imageDir/header.hex" "$projectDir/$imageDir/header.bin" || Error
-
-# generate a .hex file for just the code (offset to address 0)
-hexmate r80C200-0x845FFFs-80C200,"$projectDir/$imageDir/filled.hex" -O"$projectDir/$imageDir/data.hex" || Error
-
-# Generate the binary file of the image data
-$OBJ_CPY -I ihex -O binary "$projectDir/$imageDir/data.hex" "$projectDir/$imageDir/data.bin" || Error
-
-# generate a .hex file for just the header (offset to address 0)
-hexmate r80C000-0x845FFFs-80C000,"$projectDir/$imageDir/filled.hex" -O"$projectDir/$imageDir/presigned_image.hex" || Error
-
-# Generate the binary file of the header
-$OBJ_CPY -I ihex -O binary "$projectDir/$imageDir/presigned_image.hex" "$projectDir/$imageDir/signed_image.bin" || Error
+echo ..............................
+echo Generating unsigned executable binary
+echo ..............................
+python3 pre_sign_tool.py --config postBuildConfig.json --compilerDir "$OBJ_CPY" --projectDir "$projectDir" --imageDir "$imageDir" --imageName "$imageName" || Error
 
 echo ..............................
 echo Hashing image data
@@ -165,47 +139,38 @@ openssl dgst -sha384 -binary -out "$projectDir/$imageDir/data.hash.bin" "$projec
 
 # inject the code digest into the application header
 python3 update_header_value.py update_header_value --header_bin "$projectDir/$imageDir/header.bin" --type_code 0x3 --value_bin "$projectDir/$imageDir/data.hash.bin" || Error
-
 echo Successfully injected the digest of the application code into the header
 
 echo ..............................
-echo Generating signature for image header
+echo Generating P-384 signature for image header
 echo ..............................
 # Sign application header binary file
 openssl dgst -sha384 "$projectDir/$imageDir/header.bin" || Error
-openssl dgst -sha384 -sign $private_key_path -out "$projectDir/$imageDir/signature.der" "$projectDir/$imageDir/header.bin" || Error
+openssl dgst -sha384 -sign $p384_private_key_path -out "$projectDir/$imageDir/p384_signature.der" "$projectDir/$imageDir/header.bin" || Error
 
 # Export signature value
-python3 signing_tool.py -export "$projectDir/$imageDir/signature.der" "$projectDir/$imageDir/signature.bin" 384 || Error
+python3 signing_tool.py -export "$projectDir/$imageDir/p384_signature.der" "$projectDir/$imageDir/p384_signature.bin" 384 || Error
 echo .
 
-echo Successfully generated signature file: "$projectDir/$imageDir/signature.bin"
+echo Successfully generated signature file: "$projectDir/$imageDir/p384_signature.bin"
 echo .
 
 echo Signature:
-openssl asn1parse -in "$projectDir/$imageDir/signature.bin" -inform der
+openssl asn1parse -in "$projectDir/$imageDir/p384_signature.der" -inform der
 echo .
 
 echo ..............................
+echo ..............................
 echo Creating final binary file
 echo ..............................
-
-python3 bin_tool.py inject_bin --out_bin "$projectDir/$imageDir/signed_image.bin" --offset 0x0 --in_bin "$projectDir/$imageDir/signature.bin" || Error
-python3 bin_tool.py inject_bin --out_bin "$projectDir/$imageDir/signed_image.bin" --offset 0x60 --in_bin "$projectDir/$imageDir/header.bin" || Error
-python3 bin_tool.py inject_bin --out_bin "$projectDir/$imageDir/signed_image.bin" --offset 0x200 --in_bin "$projectDir/$imageDir/data.bin" || Error
+python3 bin_tool.py inject_from_config --config postBuildConfig.json --projectDir "$projectDir" --imageDir "$imageDir"
 
 echo Fully signed image generated: "$projectDir/$imageDir/signed_image.bin"
 
-# Clean up temp files 
-rm "$projectDir/$imageDir/header.hex" || Error
-rm "$projectDir/$imageDir/header.bin" || Error
+echo ..............................
+echo Deleting temporary files
+echo ..............................
+python3 cleanup_temp_files.py --config postBuildConfig.json --projectDir "$projectDir" --imageDir "$imageDir" || Error
 
-rm "$projectDir/$imageDir/data.hex" || Error
-rm "$projectDir/$imageDir/data.bin" || Error
-rm "$projectDir/$imageDir/data.hash.bin" || Error
 
-rm "$projectDir/$imageDir/signature.der" || Error
-rm "$projectDir/$imageDir/signature.bin" || Error
 
-rm "$projectDir/$imageDir/filled.hex" || Error
-rm "$projectDir/$imageDir/presigned_image.hex" || Error

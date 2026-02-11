@@ -32,7 +32,9 @@ Copyright (c) [2025] Microchip Technology Inc.
     such restrictions will not apply to such third party software.
 */
 
+#include <stdint.h>
 #include "flash_region2.h"
+#include "mdfu_config.h"
 
 #if defined(TEST_FLASH_REGION2)
 #include "test_flash_region2.h"
@@ -46,7 +48,9 @@ Copyright (c) [2025] Microchip Technology Inc.
 
 #endif
 
+#ifdef __XC__
 #include <xc.h>
+#endif
 
 #define FLASH_REGION_KEY                0xB7370000U
 #define FLASH_REGION_KEY_MASK           0xFFFF0000U

@@ -46,11 +46,14 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #include "mdfu_partition_executable.h"
 #include "mdfu_partition_download.h"
 #include "mdfu_partition_boot.h"
+#include "mdfu_reset.h"
 #include "mdfu_config.h"
 #include "critical_region.h"
 #include "s3.h"
 #include "led0.h"
 #include "led1.h"
+#include "mdfu_boot_demo.h"
+
 #include "../mcc_generated_files/can/can1.h"
 #include "../mcc_generated_files/timer/tmr1.h"
 
@@ -78,33 +81,12 @@ static void BootEntryRequestClear(void);
 static bool BootEntryIsRequested(void);
 static void PeripheralDeinitialize(void);
 
-enum BOOT_STATE {
-    BOOT_STATE_RESET,
-    BOOT_STATE_BOOTING,
-    BOOT_STATE_RECOVER_FROM_DOWNLOAD,
-    BOOT_STATE_INSTALL_UPGRADE,
-    BOOT_STATE_FIRMWARE_UPDATE_MODE
-};
+static enum MDFU_BOOT_STATE state = MDFU_BOOT_STATE_RESET;
 
-static enum BOOT_STATE state = BOOT_STATE_RESET;
-
-#if defined(__XC__) && !defined(RESET)
-static void Reset(void) {
-#ifdef __DEBUG
-    /* If we are in debug mode, cause a software breakpoint in the debugger */
-    __builtin_software_breakpoint();
-    while (1) {
-        // Infinite loop after breakpoint
-    }
-#else
-    // Trigger software reset
-    __asm__ volatile ("reset");
-#endif
+enum MDFU_BOOT_STATE MDFU_BootStateGet(void)
+{
+    return state;
 }
-#else
-extern void Reset(void);
-#endif
-
 
 void MDFU_BootDemoInitialize(void)
 { 
@@ -115,11 +97,11 @@ void MDFU_BootDemoInitialize(void)
      * write to the boot partition. */    
     if(boot.modeChange(MDFU_PARTITION_MODE_EXECUTABLE & MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_LOCKED) != MDFU_PARTITION_STATUS_SUCCESS)
     {
-        Reset();
+        MDFU_Reset();
     }
             
     status = MDFU_COMMAND_SESSION_WAITING;
-    state = BOOT_STATE_RESET;
+    state = MDFU_BOOT_STATE_RESET;
     LED0_Initialize();
     
     BUTTON_S3_Initialize();
@@ -130,45 +112,45 @@ void MDFU_BootDemoTasks(void)
 {
     switch(state)
     {
-        case BOOT_STATE_RESET:
+        case MDFU_BOOT_STATE_RESET:
             if(UserRequestedFirmwareUpdate() == true) 
             {
-                state = BOOT_STATE_FIRMWARE_UPDATE_MODE;
+                state = MDFU_BOOT_STATE_FIRMWARE_UPDATE_MODE;
             }
             else
             {
-                state = BOOT_STATE_BOOTING;
+                state = MDFU_BOOT_STATE_BOOTING;
             }
             break;
-        case BOOT_STATE_BOOTING:
+        case MDFU_BOOT_STATE_BOOTING:
             if(MDFU_Verify(&executable) != MDFU_VERIFY_CODE_SUCCESS)
             {
-                state = BOOT_STATE_RECOVER_FROM_DOWNLOAD;
+                state = MDFU_BOOT_STATE_RECOVER_FROM_DOWNLOAD;
             }
             else if ((MDFU_BootIsInstallationAllowed() &&
                       MDFU_Verify(&download) == MDFU_VERIFY_CODE_SUCCESS))
             {
-                state = BOOT_STATE_INSTALL_UPGRADE;
+                state = MDFU_BOOT_STATE_INSTALL_UPGRADE;
             }
             else
             {
                 //Next state if ExecutableLaunch fails BOOT_STATE_RESET
                 ExecutableLaunch();
-                Reset();
+                MDFU_Reset();
             }
             break;
-        case BOOT_STATE_RECOVER_FROM_DOWNLOAD:
+        case MDFU_BOOT_STATE_RECOVER_FROM_DOWNLOAD:
             if((MDFU_RecoveryAuthorized() == true) &&
                (MDFU_Verify(&download) == MDFU_VERIFY_CODE_SUCCESS))
             {
-                state = BOOT_STATE_INSTALL_UPGRADE;
+                state = MDFU_BOOT_STATE_INSTALL_UPGRADE;
             }
             else
             {
-                state = BOOT_STATE_FIRMWARE_UPDATE_MODE; 
+                state = MDFU_BOOT_STATE_FIRMWARE_UPDATE_MODE; 
             }
             break;
-        case BOOT_STATE_INSTALL_UPGRADE:
+        case MDFU_BOOT_STATE_INSTALL_UPGRADE:
             /* Make the executable partition readable and writable. */
             if(executable.modeChange(MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_WRITE) == MDFU_PARTITION_STATUS_SUCCESS)
             {
@@ -176,12 +158,12 @@ void MDFU_BootDemoTasks(void)
                 /* Make the executable partition readable to prevent self writes. */
                 if (executable.modeChange(MDFU_PARTITION_MODE_READ) != MDFU_PARTITION_STATUS_SUCCESS)
                 {
-                    Reset();
+                    MDFU_Reset();
                 }
             } 
-            state = BOOT_STATE_BOOTING;
+            state = MDFU_BOOT_STATE_BOOTING;
             break;
-        case BOOT_STATE_FIRMWARE_UPDATE_MODE:
+        case MDFU_BOOT_STATE_FIRMWARE_UPDATE_MODE:
         default:    
             LED0_On();
             status = MDFU_CommandProcess();
@@ -195,7 +177,7 @@ void MDFU_BootDemoTasks(void)
                 (status == MDFU_COMMAND_SESSION_FAILED))
             {
                 //Next state if failed BOOT_STATE_RESET
-                Reset();
+                MDFU_Reset();
             }
             break;
     }
@@ -247,12 +229,12 @@ static void ExecutableLaunch(void)
         if (download.modeChange(MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_WRITE & MDFU_PARTITION_MODE_LOCKED) != MDFU_PARTITION_STATUS_SUCCESS) 
         {
             //If the download partition fails to go into he correct mode, then reset. This is a security risk.
-            Reset();
+            MDFU_Reset();
         } 
         else if (executable.modeChange(MDFU_PARTITION_MODE_EXECUTABLE & MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_LOCKED) != MDFU_PARTITION_STATUS_SUCCESS) 
         {
             //If the executable fails to change to the correct mode, then reset. This is a security risk.
-            Reset();
+            MDFU_Reset();
         } 
         else 
         {
@@ -282,7 +264,7 @@ static void RAMExecutionDisable(void)
     // If RAM execution disable or lock fails reset.
     if((RAM_EXECUTION_IsDisabled() == false) || (RAM_EXECUTION_IsLocked() == false))
     {
-        Reset();
+       MDFU_Reset();
     }
 
     CRITICAL_REGION_End();

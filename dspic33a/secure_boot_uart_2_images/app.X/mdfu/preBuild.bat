@@ -47,10 +47,10 @@ REM ====================================
 :scriptStart
 
 REM Check that the required tools are installed
-python -V || goto MissingPython
+call python -V || goto MissingPython
 openssl version || goto MissingOpenSSL
 
 REM If all required tools are present, create the required key/keystore files 
 
 REM Creates the keystore and demo key pair if not already present 
-python ..\..\boot.X\mdfu\create_demo_key_files.py || goto Error
+call python ..\..\boot.X\mdfu\create_demo_key_files.py || goto Error
