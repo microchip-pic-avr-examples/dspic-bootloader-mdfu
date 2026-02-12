@@ -39,7 +39,7 @@ def file_exists(file_path):
     Check if the provided file exists.
 
     Parameters:
-    file path: path to the file
+    file_path (str): Path to the file.
 
     Returns:
     bool: True if the file exists, False otherwise.
@@ -47,111 +47,161 @@ def file_exists(file_path):
     return os.path.exists(file_path)
 
 def run(command):
+    """
+    Run a shell command and print errors if any.
+
+    Parameters:
+    command (list): Command and arguments as a list.
+
+    Returns:
+    subprocess.CompletedProcess: The result of the subprocess run.
+    """
     try:
         return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e.stderr.decode().strip()}") 
+        print(f"An error occurred: {e.stderr.strip()}") 
 
-def get_public_key_hex(pem_file):
+def get_public_key_hex(pem_file, has_compression_byte):
     """
-    Extract the public key to a byte list of hexadecimal values. 
+    Extract the public key to a byte list of hexadecimal values.
 
     Parameters:
-    pem file: public key in .pem format
+    pem_file (str): Public key in .pem format.
+    has_compression_byte (bool): Indicates if the key includes a compression byte.
 
     Returns:
-    list: public key as a list of byte values
+    list: Public key as a list of byte values.
     """
+    temp_der = "temp.der"
     command = [
-        "openssl", "pkey", "-pubin", "-in", pem_file, "-outform", "DER", "-out", "ec_temp.der"
+        "openssl", "pkey", "-pubin", "-in", pem_file, "-outform", "DER", "-out", temp_der
     ]
-
     run(command)
 
-    with open('ec_temp.der', 'rb') as f:
+    with open(temp_der, 'rb') as f:
         der_data = f.read()
-    
-    compression_byte = der_data[23]
-    pub_key_vals = der_data[23:]
-    os.remove('ec_temp.der')
+    os.remove(temp_der)
 
-    if compression_byte != 0x04:
-       print("Compressed public keys are not currently supported. Please provide an uncompressed key.")
-       sys.exit(-1) 
+    if has_compression_byte:
+        compression_byte = der_data[23]
+        pub_key_vals = der_data[23:]
+        if compression_byte != 0x04:
+            print("Compressed public keys are not currently supported. Please provide an uncompressed key.")
+            sys.exit(-1) 
+    else:
+        pub_key_vals = der_data[22:]
 
     return list(pub_key_vals)
 
-def get_key_field(index, field):
+def get_key_field(keys, index, field):
     """
-    Get the specified field of public key file as specified by the keystore.
+    Get the specified field of a public key as specified by the keystore.
 
     Parameters:
-    index: index of the key 
-    field: field name of the item to get
+    keys (list): List of key dictionaries.
+    index (int): Index of the key.
+    field (str): Field name of the item to get.
 
     Returns:
-    str: field value
+    str: Field value.
     """
     field_value = ""
-
-    with open(keystore_path, 'r') as file:
-        data = json.load(file)
-        keys = data.get('keys', []);
-
-        if index < len(keys):
-            key = keys[index]
-            field_value = key.get(field, "")
-
+    if index < len(keys):
+        key = keys[index]
+        field_value = key.get(field, "")
     return field_value
 
-def get_key_type(index):
-    return get_key_field(index,"type");
-
-def get_key_name(index):
-    return get_key_field(index,"name");
-
-def get_key_path(index):
-    return get_key_field(index,"path");
-
-def get_key_demo(index):
-    return get_key_field(index,"demo");
-
-def write_hex_to_s_file(byte_list, file_name):
+def write_file_header(file, has_demo_key):
     """
-    Write a byte list of hex values to a .S file using .long directive. 
+    Write the header, includes, section directive, and demo warning if needed.
 
     Parameters:
-    byte list: list of byte values to write to the file
-    file_name: name of the .S file to write to
-
-    Returns:
-    None
+    file (file object): The file to write to.
+    has_demo_key (bool): Whether to include the demo key warning.
     """
+    file.write(generated_keystore_description + "\n")
+    file.write(config_file_includes + "\n")
+    file.write(section_directive + "\n")
+    file.write("\n")
+    if has_demo_key:
+        file.write(f"#warning \"{DEMO_KEY_WARNING}\"\n")
+        print(f"{YELLOW}{DEMO_KEY_WARNING}{RESET}")
+
+def write_key_comment(file, key_name, key_type):
+    """
+    Write a comment for the key in the output file.
+
+    Parameters:
+    file (file object): The file to write to.
+    key_name (str): The name of the key.
+    key_type (str): The type of the key.
+    """
+    file.write(f"    ; {key_name} ({key_type})\n")
+
+def write_key_bytes(file, byte_list):
+    """
+    Write the key bytes as .long directives in the output file.
+
+    Parameters:
+    file (file object): The file to write to.
+    byte_list (list): List of byte values representing the key.
+    """
+    for i in range(0, len(byte_list), 4):
+        chunk = byte_list[i:i+4]
+        while len(chunk) < 4:
+            chunk.append(0)
+        long_value = (chunk[3] << 24) | (chunk[2] << 16) | (chunk[1] << 8) | chunk[0]
+        file.write(f"    .long 0x{long_value:08x}\n")
+
+def process_key(keys, key_index, file):
+    """
+    Process a single key: write comment, extract bytes, and write bytes.
+
+    Parameters:
+    keys (list): List of key dictionaries from keystore.json.
+    key_index (int): Index of the key to process.
+    file (file object): The file to write to.
+    """
+    key_name = get_key_field(keys, key_index, "name")
+    key_type = get_key_field(keys, key_index, "type")
+    key_path = get_key_field(keys, key_index, "path")
+
+    write_key_comment(file, key_name, key_type)
+
+    public_key_path = os.path.join(keystore_directory, key_path)
+    if not file_exists(public_key_path):
+        print(f"{RED}Public key file '{public_key_path}' does not exist. Skipping this key.{RESET}")
+        return
+
+    if key_type.lower() == "mldsa87":
+        byte_list = get_public_key_hex(public_key_path, False)
+    else:
+        byte_list = get_public_key_hex(public_key_path, True)
+
+    write_key_bytes(file, byte_list)
+
+def write_hex_to_s_file(keys, file_name):
+    """
+    Write all public keys as byte lists of hex values to a .S file using .long directive.
+
+    Parameters:
+    keys (list): List of key dictionaries from keystore.json.
+    file_name (str): Name of the .S file to write to.
+    """
+    has_demo_key = any(get_key_field(keys, idx, "demo") == "true" for idx in range(len(keys)))
+
     with open(file_name, 'w') as file:
-        file.write(generated_keystore_description + "\n")
-        file.write(config_file_includes + "\n")
-        file.write(section_directive + "\n")
-        file.write("\n");
-
-        key_index = 0;
-        file.write("    ; " + get_key_name(key_index) + " (" + get_key_type(key_index) + ")\n");
-        
-        if get_key_demo(key_index) == "true":
-            file.write(f"#warning \"{DEMO_KEY_WARNING}\"\n")
-            print(f"{YELLOW}{DEMO_KEY_WARNING}{RESET}")
-
-        # Iterate over the byte list in chunks of 4 bytes
-        for i in range(0, len(byte_list), 4):
-            # Extract up to 4 bytes, padding with zeros if necessary
-            chunk = byte_list[i:i+4]
-            while len(chunk) < 4:
-                chunk.append(0)
-
-            # Combine the bytes into a single 32-bit value in little-endian format
-            long_value = (chunk[3] << 24) | (chunk[2] << 16) | (chunk[1] << 8) | chunk[0]
-            file.write(f"    .long 0x{long_value:08x}\n")
+        write_file_header(file, has_demo_key)
+        for key_index in range(len(keys)):
+            process_key(keys, key_index, file)
 
 def exit(error_message):
+    """
+    Exit the program with an error message.
+
+    Parameters:
+    error_message (str): The error message to display.
+    """
     sys.exit(f"{RED}{error_message}{RESET}");
 
 def generate_keystore_source():
@@ -164,19 +214,21 @@ def generate_keystore_source():
     Returns:
     None
     """
-    public_key_path = os.path.join(keystore_directory, get_key_path(0))
+    if not file_exists(keystore_path):
+        exit("The keystore file does not exist. Exiting.")
 
-    if file_exists(public_key_path):
-        write_hex_to_s_file(get_public_key_hex(public_key_path), generated_keystore_path)
-    else:
-        exit("The public key file specified by the keystore does not exist. Exiting.")
+    with open(keystore_path, 'r') as file:
+        data = json.load(file)
+        keys = data.get('keys', [])
+
+    if not keys:
+        exit("No keys found in the keystore. Exiting.")
+
+    write_hex_to_s_file(keys, generated_keystore_path)
 
 def main():
-    if file_exists(keystore_path):
-        print("Creating the generated keystore.")
-        generate_keystore_source()
-    else:
-        exit("The keystore file does not exist. Exiting.")
+    print("Creating the generated keystore.")
+    generate_keystore_source()
 
 if __name__ == "__main__":
     main()

@@ -34,6 +34,7 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 
 #include "mdfu_boot_entry.h"
 #include "mdfu_config.h"
+#include "mdfu_reset.h"
 #include <stdint.h>
 
 #ifdef __XC__
@@ -58,26 +59,9 @@ static uint32_t bootEntryKey __attribute__((persistent, address(MDFU_BOOT_ENTRY_
 #if (MDFU_BOOT_ENTRY_KEY == 0)
     #error "0 is an invalid boot entry key value."
 #endif
-
-#if defined(__XC__) && !defined(RESET)
-static void Reset(void) {
-#ifdef __DEBUG
-    /* If we are in debug mode, cause a software breakpoint in the debugger */
-    __builtin_software_breakpoint();
-    while (1) {
-        // Infinite loop after breakpoint
-    }
-#else
-    // Trigger software reset
-    __asm__ volatile ("reset");
-#endif
-}
-#else
-extern void Reset(void);
-#endif
     
 void MDFU_BootEntry(void)
 {        
     bootEntryKey = MDFU_BOOT_ENTRY_KEY;
-    Reset();
+    MDFU_Reset();
 }

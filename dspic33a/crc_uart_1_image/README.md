@@ -4,7 +4,7 @@
     <img alt="Microchip Logo." src="images/microchip_logo_black_red.png">
 </picture>
 
-## dsPIC33A Single Image CRC UART Boot Demo
+## dsPIC33A Bootloader and Firmware Upgrade Demo
 
 ---
 
@@ -269,7 +269,7 @@ As shown in _Figure 9_ the boot region resides in address range 0x800000-0x805FF
 
 As noted in the description above, we want to configure the boot region to be executable, integrity checked, and write protected on reset.  These options are set in the FPR0CTRL configuration register and copied into the PR0CTRL SFR on reset.  The read bit (RD) also needs to be enabled for the CPU to access the code.  Finally, the region needs to be enabled.  *NOTE* the configuration bit is a DISABLE bit so take note on the setting when making changes.
 
-By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset. Since we don’t want this region’s permissions to change, we set the region type bit (FPR0CTRL_RTYPE) to IRT (Immutable Root of Trust). By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates, however the most secure option for the bootloader region is to have this set as IRT and disable the locking/unlocking mechanism completely.
+By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset. Since we don’t want this region’s permissions to change, we set the region type bit (FPR0CTRL_RTYPE) to IRT (Immutable Root of Trust). By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates. However, for the bootloader region, it is more secure to set this bit to IRT and disable the locking and unlocking mechanism completely.
 
 To ensure IRT execution is disabled, we set the IRTCTRL DONE bit before launching the executable. Additionally, the executing bootloader IRT partition must ensure that the non-IRT executable code is not prefetched before the DONE bit is set. The datasheet recommends adding at least a 32-byte buffer between the end of the IRT executable firmware and the start of the non-IRT executable firmware. This buffer ensures that the executing IRT code is not directly adjacent to the non-IRT executable space, where the prefetch cache may load the non-IRT executable space program memory before the DONE bit is set. This has been added in the linker file. See _Figure 9_ above for the full memory map.
 

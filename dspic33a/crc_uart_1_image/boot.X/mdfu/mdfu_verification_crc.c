@@ -85,7 +85,7 @@ static enum MDFU_VERIFY_CODE VerifyHeader(struct MDFU_PARTITION const * const pa
     partition->read(0, sizeof(uint32_t), &headerCrcExpected);
 
     //Calculate the actual CRC of the header
-    bool result = PartitionCrcCalculate(partition, MDFU_CONFIG_HEADER_OFFSET, MDFU_CONFIG_MAX_HEADER_LENGTH, &headerCrcCalculated);
+    bool result = PartitionCrcCalculate(partition, MDFU_CONFIG_HEADER_OFFSET, MDFU_CONFIG_HEADER_LENGTH, &headerCrcCalculated);
         
     if((false == result) || 
        (headerCrcExpected != headerCrcCalculated))

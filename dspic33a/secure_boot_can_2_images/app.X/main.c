@@ -47,9 +47,6 @@ int main(void)
 {
     uint32_t delay = 0;
     
-    //Enable cache - was disabled by the boot loader 
-    CHECONbits.ON = 1;  
-    
     SYSTEM_Initialize();
 
     LED7_Initialize();

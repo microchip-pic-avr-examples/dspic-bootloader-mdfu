@@ -55,7 +55,9 @@
 // Section: Type Definitions
 // *****************************************************************************
 // *****************************************************************************
-#define CRYPTO_HASH_SHA512CTX_SIZE (512)
+#define CRYPTO_HASH_SHA512CTX_SIZE (608)
+
+#define CRYPTO_HASH_MAX_DIGEST_SIZE (64U) // Max size of a hash digest (SHA-512 or SHA3-512)
 
 typedef enum {
     CRYPTO_HASH_INVALID = 0,

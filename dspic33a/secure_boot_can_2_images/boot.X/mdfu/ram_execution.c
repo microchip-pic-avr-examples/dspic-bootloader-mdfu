@@ -35,7 +35,7 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #ifdef __XC__
 #include <xc.h>
 #else
-#include "sfrs.h"
+#include "paccon1_sfrs.h"
 #endif
 
 #include "ram_execution.h"

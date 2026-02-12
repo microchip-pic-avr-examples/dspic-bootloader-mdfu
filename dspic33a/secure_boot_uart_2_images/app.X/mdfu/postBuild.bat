@@ -57,7 +57,7 @@ REM ====================================
 Set reset=[0m
 Set cyan=[46m
 Set red=[41m
-Set private_key_path="..\..\boot.X\mdfu\keystore\private_key.pem"
+Set p384_private_key_path="..\..\boot.X\mdfu\keystore\p384_private_key.pem"
 
 REM Jump to start of the script logic
 goto scriptStart
@@ -73,16 +73,6 @@ REM Description: Prints out a message with RED background that python is not ins
 REM ------------------------------------
 :MissingPython
 echo %red% Python was not found! Install Python3, add it to the system path, and close/reopen MPLAB X. %reset%
-exit /b -1
-
-REM ------------------------------------
-REM Function: MissingOpenSSL
-REM 
-REM Description: Prints out a message with RED background that OpenSSL is not installed and exits the script.
-REM ------------------------------------
-:MissingOpenSSL
-echo %red% OpenSSL was not found! Install OpenSSL, add it to the system path, and close/reopen MPLAB X. %reset%
-echo %red% For OpenSSL installs please check https://wiki.openssl.org/index.php/Binaries %reset%
 exit /b -1
 
 REM ------------------------------------
@@ -117,11 +107,11 @@ exit 0
 )
 
 REM Check that the required tools are installed
-python -V || goto MissingPython
-openssl version || goto MissingOpenSSL
+call python -V || goto MissingPython
+call python verify_openssl.py || goto Error
 
-REM Check that the private key is present 
-if not EXIST %private_key_path% (
+REM Check that the p384 private key is present 
+if not EXIST %p384_private_key_path% (
 goto MissingPrivateKey
 )
 
@@ -134,26 +124,10 @@ if EXIST %compilerDir%\xc-dsc-objcopy.exe (
 Set OBJ_CPY=%compilerDir%\xc-dsc-objcopy.exe
 )
 
-REM Fill in unimplemented memory locations in the executable space 
-hexmate r80C000-0x845FFF,"%projectDir%\%imageDir%\%imageName%" -O"%projectDir%\%imageDir%\filled.hex" -FILL=w1:0x00@0x80C000:0x845FFF || goto Error
-
-REM generate a .hex file for just the header (offset to address 0)
-hexmate r80C060-0x80C1FFs-80C060,"%projectDir%\%imageDir%\filled.hex" -O"%projectDir%\%imageDir%\header.hex" || goto Error
-
-REM Generate the binary file of the header
-%OBJ_CPY% -I ihex -O binary "%projectDir%\%imageDir%\header.hex" "%projectDir%\%imageDir%\header.bin" || goto Error
-
-REM generate a .hex file for just the code (offset to address 0)
-hexmate r80C200-0x845FFFs-80C200,"%projectDir%\%imageDir%\filled.hex" -O"%projectDir%\%imageDir%\data.hex" || goto Error
-
-REM Generate the binary file of the image data
-%OBJ_CPY% -I ihex -O binary "%projectDir%\%imageDir%\data.hex" "%projectDir%\%imageDir%\data.bin" || goto Error
-
-REM generate a .hex file for just the header (offset to address 0)
-hexmate r80C000-0x845FFFs-80C000,"%projectDir%\%imageDir%\filled.hex" -O"%projectDir%\%imageDir%\presigned_image.hex" || goto Error
-
-REM Generate the binary file of the header
-%OBJ_CPY% -I ihex -O binary "%projectDir%\%imageDir%\presigned_image.hex" "%projectDir%\%imageDir%\signed_image.bin" || goto Error
+echo .....................................
+echo Generating unsigned executable binary
+echo .....................................
+call python pre_sign_tool.py --config postBuildConfig.json --compilerDir %OBJ_CPY% --projectDir %projectDir% --imageDir %imageDir% --imageName %imageName% || goto Error
 
 echo ..............................
 echo Hashing image data
@@ -163,47 +137,35 @@ openssl dgst -sha384 "%projectDir%\%imageDir%\data.bin" || goto Error
 openssl dgst -sha384 -binary -out "%projectDir%\%imageDir%\data.hash.bin" "%projectDir%\%imageDir%\data.bin" || goto Error
 
 REM inject the code digest into the executable header
-python update_header_value.py update_header_value --header_bin "%projectDir%\%imageDir%\header.bin" --type_code 0x3 --value_bin "%projectDir%\%imageDir%\data.hash.bin" || goto Error
+call python update_header_value.py update_header_value --header_bin "%projectDir%\%imageDir%\header.bin" --type_code 0x3 --value_bin "%projectDir%\%imageDir%\data.hash.bin" || goto Error
 echo.
 
 echo ..............................
-echo Generating signature for image header
+echo Generating P-384 signature for image header
 echo ..............................
 REM Sign executable header binary file
 openssl dgst -sha384 "%projectDir%\%imageDir%\header.bin" || goto Error
-openssl dgst -sha384 -sign %private_key_path% -out "%projectDir%\%imageDir%\signature.der" "%projectDir%\%imageDir%\header.bin" || goto Error
+openssl dgst -sha384 -sign %p384_private_key_path% -out "%projectDir%\%imageDir%\p384_signature.der" "%projectDir%\%imageDir%\header.bin" || goto Error
 
 REM Export signature value
-python signing_tool.py -export "%projectDir%\%imageDir%\signature.der" "%projectDir%\%imageDir%\signature.bin" 384 || goto Error
+call python signing_tool.py -export "%projectDir%\%imageDir%\p384_signature.der" "%projectDir%\%imageDir%\p384_signature.bin" 384 || goto Error
 echo.
 
-echo Successfully generated signature file: "%projectDir%\%imageDir%\signature.bin"
+echo Successfully generated signature file: "%projectDir%\%imageDir%\p384_signature.bin"
 echo.
 
 echo Signature:
-openssl asn1parse -in "%projectDir%\%imageDir%\signature.der" -inform DER
+openssl asn1parse -in "%projectDir%\%imageDir%\p384_signature.der" -inform DER
 echo.
 
 echo ..............................
 echo Creating final binary file
 echo ..............................
-
-python bin_tool.py inject_bin --out_bin "%projectDir%\%imageDir%\signed_image.bin" --offset 0x0 --in_bin "%projectDir%\%imageDir%\signature.bin" || goto Error
-python bin_tool.py inject_bin --out_bin "%projectDir%\%imageDir%\signed_image.bin" --offset 0x60 --in_bin "%projectDir%\%imageDir%\header.bin" || goto Error
-python bin_tool.py inject_bin --out_bin "%projectDir%\%imageDir%\signed_image.bin" --offset 0x200 --in_bin "%projectDir%\%imageDir%\data.bin" || goto Error
+call python bin_tool.py inject_from_config --config postBuildConfig.json --projectDir %projectDir% --imageDir %imageDir% || goto Error
 
 echo Fully signed image generated: "%projectDir%\%imageDir%\signed_image.bin"
 
-REM Clean up temp files 
-del "%projectDir%\%imageDir%\header.hex" || goto Error
-del "%projectDir%\%imageDir%\header.bin" || goto Error
-
-del "%projectDir%\%imageDir%\data.hex" || goto Error
-del "%projectDir%\%imageDir%\data.bin" || goto Error
-del "%projectDir%\%imageDir%\data.hash.bin" || goto Error
-
-del "%projectDir%\%imageDir%\signature.der" || goto Error
-del "%projectDir%\%imageDir%\signature.bin" || goto Error
-
-del "%projectDir%\%imageDir%\filled.hex" || goto Error
-del "%projectDir%\%imageDir%\presigned_image.hex" || goto Error
+echo ..............................
+echo Deleting temporary files
+echo ..............................
+call python cleanup_temp_files.py --config postBuildConfig.json --projectDir %projectDir% --imageDir %imageDir% || goto Error

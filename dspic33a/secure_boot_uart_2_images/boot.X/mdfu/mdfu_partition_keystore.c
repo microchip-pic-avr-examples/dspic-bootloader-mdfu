@@ -216,7 +216,7 @@ static bool ArgumentsAreInvalid(uint32_t offset, uint32_t length, void const * c
     const uint32_t endOffset = offset + length;
 
     return  ((NULL == pointer) ||
-            (offset >= P384_PUBLIC_KEY_SIZE) ||
-            (length > P384_PUBLIC_KEY_SIZE) ||
-            (endOffset > P384_PUBLIC_KEY_SIZE));
+            (offset >= MDFU_CONFIG_KEYSTORE_DATA_LENGTH) ||
+            (length > MDFU_CONFIG_KEYSTORE_DATA_LENGTH) ||
+            (endOffset > MDFU_CONFIG_KEYSTORE_DATA_LENGTH));
 } 
