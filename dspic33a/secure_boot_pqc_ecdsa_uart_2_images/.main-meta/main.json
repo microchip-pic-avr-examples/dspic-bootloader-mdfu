@@ -41,7 +41,6 @@
             "Board",
             "Bootloader",
             "Bootloader Client",
-            "CAN FD",
             "Certificate",
             "Code Protection",
             "Communication",
@@ -86,11 +85,17 @@
             "Security Device",
             "Serial Communication",
             "SHA",
-            "SHA-256",
+            "SHA-512",
             "Software",
             "Wired",
             "XC16",
-            "XC-DSC"
+            "XC-DSC",
+            "PQC",
+            "Post-Quantum Cryptography",
+            "Secure Bootloader",
+            "MLDSA",
+            "ML-DSA",
+            "ECDSA"
         ]
     }
 }
