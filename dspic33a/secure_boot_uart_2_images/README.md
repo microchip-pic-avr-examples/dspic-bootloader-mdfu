@@ -363,14 +363,6 @@ If porting to another dsPIC33A device, the MCC generated files will need to be r
 #### Bootloader and Application 
 * The demo utilizes the files within the bsp (board support package) folders for both boot.X and app.X to configure the board's LEDs and buttons. If porting to a different dsPIC33A device, the ports and pin numbers will need to be modified in the .c files therein. See the device's datasheet for pinout details. 
 
-## Application Startup Considerations
-### Core Cache Handling On Application Startup
-In order to ensure that the application code cannot read any part of the bootloader code the bootloader will disable the core cache and force the cache to clear prior to starting the user application. This means on startup the application must re-enable the core cache function for the hardware performance benefits to be realized. The user application can enable hardware cache by setting the CHECON ON bit (this bit already set in this demo):
-```
-//Enable cache - was disabled by the boot loader 
-CHECONbits.ON = 1;
-```
-
 ## Device Configuration
 This demo has some device configurations that are an important part of the solution.  The dsPIC33A family of devices have a flexible flash programming security module that is utilized in this demo.  This section describes how the module is configured and used in this demo.  For more complete information about the module, please refer to the device datasheet.
 
@@ -401,11 +393,9 @@ As shown in _Figure 19_ the boot region resides in address range 0x800000-0x80AF
 
 As noted in the description above, we want to configure the boot region to be executable, readable, integrity checked, and write protected on reset.  These options are set in the FPR0CTRL configuration register and copied into the PR0CTRL SFR on reset.  Finally, the region needs to be enabled.  *NOTE* the configuration bit is a DISABLE bit so take note on the setting when making changes.
 
-By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset.  Since we don't want this region's permissions to change, we set the region type bit (FPR0CTRL_RTYPE) to IRT (Immutable Root of Trust).  By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates, however the most secure option for the bootloader region is to have this set as IRT and disable the locking/unlocking mechanism completely.
+By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset.  Since we don't want this region's permissions to change, we set the region type bit (FPR0CTRL_RTYPE) to IRT (Immutable Root of Trust).  By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates. However, for the bootloader region, it is more secure to set this bit to IRT and disable the locking and unlocking mechanism completely.
 
-To ensure IRT execution is disabled, we set the IRTCTRL DONE bit before launching the executable. Additionally, the executing bootloader IRT partition must ensure that the non-IRT executable code is not prefetched before the DONE bit is set. The datasheet recommends adding at least a 32-byte buffer between the end of the IRT executable firmware and the start of the non-IRT executable firmware. This buffer ensures that the executing IRT code is not directly adjacent to the non-IRT executable space, where the prefetch cache may load the non-IRT executable space program memory before the DONE bit is set. The keystore, although designated as IRT code, is non-executable and therefore provides the recommended buffering between the executable IRT bootloader partition and the executable non-IRT executable partition. See _Figure 19_ above for the full memory map. 
-
-Prior to transferring control to the executable partition, we also invalidate and disable the instruction cache (CHECONbits) to protect any IRT firmware code from being accessed by the non-IRT executable partition.  
+To ensure IRT execution is disabled, we set the IRTCTRL DONE bit before launching the executable. Additionally, the executing bootloader IRT partition must ensure that the non-IRT executable code is not prefetched before the DONE bit is set. The datasheet recommends adding at least a 32-byte buffer between the end of the IRT executable firmware and the start of the non-IRT executable firmware. This buffer ensures that the executing IRT code is not directly adjacent to the non-IRT executable space, where the prefetch cache may load the non-IRT executable space program memory before the DONE bit is set. The keystore, although designated as IRT code, is non-executable and therefore provides the recommended buffering between the executable IRT bootloader partition and the executable non-IRT executable partition. See _Figure 19_ above for the full memory map.  
 
 *NOTE* - This configuration is used to facilitate ease of change/modification.  The dsPIC33A has permanent configuration options that lock the boot region from any changes on reset and can't be unlocked or modified, even by reprogramming.  Please see the [Production Concerns](#production-concerns) section below and the datasheet for additional information about these settings.
 
@@ -416,7 +406,7 @@ As shown in _Figure 19_ the keystore region resides in address range 0x80B000-0x
 
 As noted in the description above, we want to configure the keystore region to be non-executable, readable, integrity checked, and write protected on reset.  These options are set in the FPR1CTRL configuration register and copied into the PR1CTRL SFR on reset.  Finally, the region needs to be enabled.  *NOTE* the configuration bit is a DISABLE bit so take note on the setting when making changes.
 
-By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset.  Since we don't want this region's permissions to change, we set the region type bit (FPR1CTRL_RTYPE) to IRT (Immutable Root of Trust).  By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates, however the most secure option for the keystore region is to have this set as IRT and disable the locking/unlocking mechanism completely. 
+By using the configuration bits, this ensures that the registers are loaded with the default behavior on reset.  Since we don't want this region's permissions to change, we set the region type bit (FPR1CTRL_RTYPE) to IRT (Immutable Root of Trust).  By default, the region type bit is set to FIRMWARE which allows for region locking/unlocking and permissions updates.  However, for the keystore region, it is more secure to set this bit to IRT and disable the locking and unlocking mechanism completely.
 
 *NOTE* - This configuration is used to facilitate ease of change/modification.  The dsPIC33A has permanent configuration options that lock the boot region from any changes on reset and can't be unlocked or modified, even by reprogramming.  Please see the [Production Concerns](#production-concerns) section below and the datasheet for additional information about these settings.
 

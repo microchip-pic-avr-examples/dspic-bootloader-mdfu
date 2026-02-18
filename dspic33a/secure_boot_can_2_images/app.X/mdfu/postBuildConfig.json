@@ -1,0 +1,45 @@
+{
+    "executable_signature": {
+        "origin": "0x80E000",
+        "length": "0x60"
+    },
+    "executable_header":
+    {
+        "origin": "0x80E060",
+        "length": "0x1A0"
+    },
+    "ivt": {
+        "origin": "0x80E200",
+        "length": "0x1000"
+    },
+    "executable_data": {
+        "origin": "0x80F200",
+        "length": "0x37E00"
+    },
+    "out_bin": "signed_image.bin",
+    "injections": [
+        {
+            "in_bin": "p384_signature.bin",
+            "offset": "0x0"
+        },
+        {
+            "in_bin": "header.bin",
+            "offset": "0x60"
+        },
+        {
+            "in_bin": "data.bin",
+            "offset": "0x200"
+        }
+    ],
+    "temp_files": [
+        "header.hex",
+        "header.bin",
+        "data.hex",
+        "data.bin",
+        "data.hash.bin",
+        "p384_signature.der",
+        "p384_signature.bin",
+        "filled.hex",
+        "presigned_image.hex"
+    ]
+}

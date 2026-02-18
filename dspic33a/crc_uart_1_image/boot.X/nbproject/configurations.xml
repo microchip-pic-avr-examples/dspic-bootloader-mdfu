@@ -66,6 +66,7 @@
         <itemPath>mdfu/flash_region.h</itemPath>
         <itemPath>mdfu/flash_region0.h</itemPath>
         <itemPath>mdfu/flash_region1.h</itemPath>
+        <itemPath>mdfu/mdfu_reset.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -139,6 +140,7 @@
         <itemPath>mdfu/mdfu_recovery_authorization.c</itemPath>
         <itemPath>mdfu/flash_region0.c</itemPath>
         <itemPath>mdfu/flash_region1.c</itemPath>
+        <itemPath>mdfu/mdfu_reset.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
     </logicalFolder>

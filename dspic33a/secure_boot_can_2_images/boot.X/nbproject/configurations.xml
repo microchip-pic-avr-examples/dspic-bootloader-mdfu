@@ -103,6 +103,7 @@
         <itemPath>mdfu/flash_region1.h</itemPath>
         <itemPath>mdfu/flash_region2.h</itemPath>
         <itemPath>mdfu/flash_region3.h</itemPath>
+        <itemPath>mdfu/mdfu_reset.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -115,6 +116,7 @@
       <itemPath>mdfu/preBuild.bat</itemPath>
       <itemPath>mdfu/preBuild.sh</itemPath>
       <itemPath>config.toml</itemPath>
+      <itemPath>mdfu/verify_openssl.py</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -210,6 +212,7 @@
         <itemPath>mdfu/flash_region1.c</itemPath>
         <itemPath>mdfu/flash_region2.c</itemPath>
         <itemPath>mdfu/flash_region3.c</itemPath>
+        <itemPath>mdfu/mdfu_reset.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>generated_keystore.S</itemPath>

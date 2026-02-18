@@ -74,7 +74,7 @@ enum MDFU_VERIFY_CODE MDFU_VerifyHeaderAuthenticity(struct MDFU_PARTITION const 
         
         if ((keystore.read(0, P384_PUBLIC_KEY_SIZE, publicKey) != P384_PUBLIC_KEY_SIZE) || (partition->read(0, P384_SIGNATURE_SIZE, signature) != P384_SIGNATURE_SIZE)){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;
-        } else if(partition->hash(MDFU_PARTITION_HASH_ALGORITHM_SHA2_384, MDFU_CONFIG_HEADER_OFFSET, MDFU_CONFIG_MAX_HEADER_LENGTH, headerDigest) != MDFU_PARTITION_STATUS_SUCCESS){
+        } else if(partition->hash(MDFU_PARTITION_HASH_ALGORITHM_SHA2_384, MDFU_CONFIG_HEADER_OFFSET, MDFU_CONFIG_HEADER_LENGTH, headerDigest) != MDFU_PARTITION_STATUS_SUCCESS){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;
         } else if (Crypto_DigiSign_Ecdsa_Verify(CRYPTO_HANDLER_HW_INTERNAL, headerDigest, sizeof(headerDigest), signature, sizeof(signature), publicKey, sizeof(publicKey), &hashStatus, CRYPTO_ECC_CURVE_P384, 0x1U) != CRYPTO_DIGISIGN_SUCCESS){
             returnCode = MDFU_VERIFY_CODE_INVALID_SIGNATURE;
@@ -106,7 +106,7 @@ enum MDFU_VERIFY_CODE MDFU_VerifyPartitionIntegrity(struct MDFU_PARTITION const 
                 (MDFU_HeaderItemBufferRead(partition, MDFU_PARTITION_HEADER_DATA_SIZE, sizeof (uint32_t), &codeSize) != sizeof (uint32_t))) {
             returnCode = MDFU_VERIFY_CODE_INVALID_HEADER;
         }
-        else if(partition->hash(MDFU_PARTITION_HASH_ALGORITHM_SHA2_384, MDFU_CONFIG_HEADER_OFFSET + MDFU_CONFIG_MAX_HEADER_LENGTH, codeSize, calculatedDigest) != MDFU_PARTITION_STATUS_SUCCESS){
+        else if(partition->hash(MDFU_PARTITION_HASH_ALGORITHM_SHA2_384, MDFU_CONFIG_HEADER_OFFSET + MDFU_CONFIG_HEADER_LENGTH, codeSize, calculatedDigest) != MDFU_PARTITION_STATUS_SUCCESS){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;
         } else if(memcmp(calculatedDigest, expectedDigest, sizeof(expectedDigest)) != MEMCMP_EQUAL){
             returnCode = MDFU_VERIFY_CODE_INVALID_INTEGRITY_CHECK;

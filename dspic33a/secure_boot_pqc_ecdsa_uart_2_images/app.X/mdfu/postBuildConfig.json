@@ -1,0 +1,52 @@
+{
+    "executable_signature": {
+        "origin": "0x81A000",
+        "length": "0x12A0"
+    },
+    "executable_header":
+    {
+        "origin": "0x81B2A0",
+        "length": "0x1A0"
+    },
+    "executable_data": {
+        "origin": "0x81B440",
+        "length": "0x31BC0"
+    },
+    "out_bin": "signed_image.bin",
+    "injections": [
+        {
+            "in_bin": "p384_signature.bin",
+            "offset": "0x0"
+        },
+        {
+            "in_bin": "mldsa87_signature.bin",
+            "offset": "0x60"
+        },
+        {
+            "in_bin": "header.bin",
+            "offset": "0x12A0"
+        },
+        {
+            "in_bin": "data.bin",
+            "offset": "0x1440"
+        }
+    ],
+    "zero_fill": [
+        {
+            "offset": "0x1273",
+            "length": "0x2D"
+        }
+    ],
+    "temp_files": [
+        "header.hex",
+        "header.bin",
+        "data.hex",
+        "data.bin",
+        "data.hash.bin",
+        "p384_signature.der",
+        "p384_signature.bin",
+        "mldsa87_signature.bin",
+        "filled.hex",
+        "presigned_image.hex"
+    ]
+}

@@ -45,6 +45,7 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #include "mdfu_recovery_authorization.h"
 #include "mdfu_partition_executable.h"
 #include "mdfu_partition_boot.h"
+#include "mdfu_reset.h"
 #include "mdfu_config.h"
 #include "critical_region.h"
 #include "s3.h"
@@ -82,24 +83,6 @@ enum BOOT_STATE {
 
 static enum BOOT_STATE state = BOOT_STATE_RESET;
 
-#if defined(__XC__) && !defined(RESET)
-static void Reset(void) {
-#ifdef __DEBUG
-    /* If we are in debug mode, cause a software breakpoint in the debugger */
-    __builtin_software_breakpoint();
-    while (1) {
-        // Infinite loop after breakpoint
-    }
-#else
-    // Trigger software reset
-    __asm__ volatile ("reset");
-#endif
-}
-#else
-extern void Reset(void);
-#endif
-
-
 void MDFU_BootDemoInitialize(void)
 { 
     RAMExecutionDisable();
@@ -109,7 +92,7 @@ void MDFU_BootDemoInitialize(void)
      * write to the boot partition. */    
     if(boot.modeChange(MDFU_PARTITION_MODE_EXECUTABLE & MDFU_PARTITION_MODE_READ & MDFU_PARTITION_MODE_LOCKED) != MDFU_PARTITION_STATUS_SUCCESS)
     {
-        Reset();
+        MDFU_Reset();
     }
             
     status = MDFU_COMMAND_SESSION_WAITING;
@@ -154,7 +137,7 @@ void MDFU_BootDemoTasks(void)
                 (status == MDFU_COMMAND_SESSION_FAILED))
             {
                 //Next state if failed BOOT_STATE_RESET
-                Reset();
+                MDFU_Reset();
             }
             break;
     }
@@ -195,7 +178,7 @@ static bool ExecutableLaunch(void)
             executable.run();
         }
         //If the application fails to launch correctly then reset to the bootloader to attempt recovery.
-        Reset();
+        MDFU_Reset();
     } 
     
     return false;
@@ -220,7 +203,7 @@ static void RAMExecutionDisable(void)
     // If RAM execution disable or lock fails reset.
     if((RAM_EXECUTION_IsDisabled() == false) || (RAM_EXECUTION_IsLocked() == false))
     {
-        Reset();
+        MDFU_Reset();
     }
     
     CRITICAL_REGION_End();
