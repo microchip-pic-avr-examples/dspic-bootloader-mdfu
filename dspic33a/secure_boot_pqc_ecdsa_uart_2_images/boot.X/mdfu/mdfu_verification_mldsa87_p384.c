@@ -35,6 +35,8 @@ Copyright (c) [2012-2025] Microchip Technology Inc.
 #include <stdbool.h>
 #include <string.h>
 
+#include "./user_settings.h"
+
 #include "mdfu_verification.h"
 #include "mdfu_partition_header.h"
 #include "mdfu_config.h"
@@ -42,12 +44,19 @@ Copyright (c) [2012-2025] Microchip Technology Inc.
 
 #include "user_settings.h"
 
+#include "user_settings.h"
+
+/* Included from the ../crypto/common_crypto project include path */
 #include "crypto_digsign.h"
 #include "crypto_common.h"
-#include "crypto_digisign_cam05346_wrapper.h"
 #include "crypto_hash.h"
-#include "crypto/wolfssl/wolfssl/wolfcrypt/dilithium.h"
-#include "crypto/wolfssl/wolfssl/wolfcrypt/error-crypt.h"
+
+/* Included from the ../crypto/drivers/wrapper project include path */
+#include "crypto_digisign_cam05346_wrapper.h"
+
+/* Included from the ../crypto/wolfssl/wolfssl/wolfcrypt project include path */
+#include "dilithium.h"
+#include "error-crypt.h"
 
 #define MEMCMP_EQUAL            0
 #define SHA384_DIGEST_LENGTH    48UL
@@ -207,11 +216,11 @@ static enum MDFU_VERIFY_CODE MDFU_VerifyHeaderAuthenticityMLDSA87(struct MDFU_PA
         int status = 0;
         static dilithium_key key;
         
-        wc_MlDsaKey_SetParams(&key, WC_ML_DSA_87);
-
-        if (keystore.read(MDFU_CONFIG_KEYSTORE_MLDSA87_PUBLIC_KEY_OFFSET, DILITHIUM_ML_DSA_87_PUB_KEY_SIZE, publicKey) != DILITHIUM_ML_DSA_87_PUB_KEY_SIZE){
+        (void)wc_MlDsaKey_SetParams(&key, WC_ML_DSA_87);
+        
+        if (keystore.read(MDFU_CONFIG_KEYSTORE_MLDSA87_PUBLIC_KEY_OFFSET, DILITHIUM_ML_DSA_87_PUB_KEY_SIZE, publicKey) != (size_t)DILITHIUM_ML_DSA_87_PUB_KEY_SIZE){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;
-        } else if (partition->read(MDFU_CONFIG_SIGNATURE_MLDSA87_OFFSET, DILITHIUM_ML_DSA_87_SIG_SIZE, signature) != DILITHIUM_ML_DSA_87_SIG_SIZE){
+        } else if (partition->read(MDFU_CONFIG_SIGNATURE_MLDSA87_OFFSET, DILITHIUM_ML_DSA_87_SIG_SIZE, signature) != (size_t)DILITHIUM_ML_DSA_87_SIG_SIZE){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;
         } else if (partition->read(MDFU_CONFIG_HEADER_OFFSET, MDFU_CONFIG_HEADER_LENGTH, header) != MDFU_CONFIG_HEADER_LENGTH){
             returnCode = MDFU_VERIFY_CODE_FAILURE_UNKNOWN;

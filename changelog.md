@@ -1,3 +1,16 @@
+# dsPIC Bootloader MDFU v1.2.0
+### Release Highlights
+
+* Addressed an error in signing_tool.py for "dsPIC33A Multi-Image ECDSA UART Boot Demo" and "dsPIC33A Multi-Image ECDSA CAN Boot Demo", where hashes beginning with 0x00 could result in signing failures.
+* Removed extra main.c in "dsPIC33A Single Image CRC UART Boot Demo".
+* Fixed MISRA violations in "dsPIC33A Multi-Image PQC ECDSA Hybrid UART Boot Demo".
+
+### Features Added\Updated
+
+* Addressed an error in signing_tool.py for "dsPIC33A Multi-Image ECDSA UART Boot Demo" and "dsPIC33A Multi-Image ECDSA CAN Boot Demo", where hashes beginning with 0x00 could result in signing failures.
+* Removed extra main.c in "dsPIC33A Single Image CRC UART Boot Demo".
+* Fixed MISRA violations in "dsPIC33A Multi-Image PQC ECDSA Hybrid UART Boot Demo".
+
 # dsPIC Bootloader MDFU v1.1.0
 ### Release Highlights
 
@@ -10,7 +23,6 @@
 * Updated shared files and scripts in "dsPIC33A Single Image CRC UART Boot Demo", "dsPIC33A Multi-Image ECDSA UART Boot Demo", and "dsPIC33A Multi-Image ECDSA CAN Boot Demo" to match updates made in "dsPIC33A Multi-Image PQC ECDSA Hybrid UART Boot Demo". 
 * Updated Crypto Accelerator Module to v1.3 in "dsPIC33A Multi-Image ECDSA UART Boot Demo" and "dsPIC33A Multi-Image ECDSA CAN Boot Demo".
 * Resolved an issue in all demos where a DEBUG build would cause the device to lock up when not running in a debug session.
-* Addressed an error in signing_tool.py for both demos, where hashes beginning with 0x00 could result in signing failures.
 * Corrected script errors in both demos by eliminating the use of direct calls to Python scripts.
 
 # dsPIC Bootloader MDFU v1.0.0

@@ -34,9 +34,11 @@ Copyright (c) [2025] Microchip Technology Inc.
 
 #include "mdfu_config.h"
 #include "mdfu_internal_flash.h"
+#include "critical_region.h"
+
+/* Included from the ../mcc_generated_files/flash project include path */
 #include "flash.h"
 #include "flash_types.h"
-#include "critical_region.h"
 
 #include <string.h>
 #include <stdint.h>
