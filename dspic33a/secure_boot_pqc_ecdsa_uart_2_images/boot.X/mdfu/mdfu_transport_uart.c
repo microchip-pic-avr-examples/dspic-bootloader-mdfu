@@ -36,9 +36,11 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #include <stddef.h>
 #include <string.h>
 #include "mdfu_transport.h"
-#include "uart1.h"
 #include "mdfu_config.h"
 #include "mdfu_commands.h"
+
+/* Included from the ../mcc_generated_files/uart project include path */
+#include "uart1.h"
 
 #define START_OF_FRAME_CODE     (0x56U)
 #define END_OF_FRAME_CODE       (0x9EU)
