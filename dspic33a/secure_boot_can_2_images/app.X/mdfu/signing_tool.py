@@ -23,7 +23,7 @@ def file_exists(file_name):
         print("File does not exist: " + file_name +'\n')
         return False
 
-def find_signature(data, data_len, quiet=True):
+def find_signature(data, data_len, sig_len, quiet=True):
     """Find and return the signature data in the ASN.1 format datastream.
 
     Keyword arguments:
@@ -46,19 +46,24 @@ def find_signature(data, data_len, quiet=True):
 
         # Capture the data for data type 0x02 (integer).
         if data_type == 0x02:
-            # This is part of the signature.  If the length is odd, there is a 00 pad
-            # in front of the r or s portion.
-            data_offset = 0
-            if (size & 1) != 0:
-                data_offset = 1
-
+             # Remove sign-extension 0x00 if present and value is longer than sha_size
+            if len(value) > (sig_len/2) and value[0] == 0x00:
+                value = value[1:]
+            # Left-pad with 0x00 if value is shorter than sha_size
+            if len(value) < (sig_len/2):
+                value = (b'\x00' * int((sig_len/2) - len(value))) + value
             if sig_r is None:
-                sig_r = value[data_offset:]
+                sig_r = value
             else:
-                sig_s = value[data_offset:]
-
-    console_print(quiet, "Signature R-value: %s" % ' '.join('%02x' % x for x in sig_r))
-    console_print(quiet, "Signature S-value: %s" % ' '.join('%02x' % x for x in sig_s))
+                sig_s = value    
+    if sig_r is not None:
+        console_print(quiet, "Signature R-value: %s" % ' '.join('%02x' % x for x in sig_r))
+    else:
+        console_print(quiet, "Signature R-value: None")
+    if sig_s is not None:
+        console_print(quiet, "Signature S-value: %s" % ' '.join('%02x' % x for x in sig_s))
+    else:
+        console_print(quiet, "Signature S-value: None")
 
     if sig_r is not None and sig_s is not None:
         sig_data = sig_r + sig_s
@@ -90,7 +95,12 @@ def create_export_file(der_file, bin_file, sha_size, quiet=True):
             sig_bytes = f.read()
         f.close()        
 
-        signature = find_signature(sig_bytes, len(sig_bytes),quiet)
+        if sha_size == '256':
+            expected_sig_size = 64   # 32 bytes for R + 32 bytes for S
+        elif sha_size == '384':
+            expected_sig_size = 96   # 48 bytes for R + 48 bytes for S
+            
+        signature = find_signature(sig_bytes, len(sig_bytes), expected_sig_size, quiet)
         sig_len = len(signature)
        
         # Verify that the length of the signature matches the expected length for the sha type
@@ -113,20 +123,15 @@ def create_export_file(der_file, bin_file, sha_size, quiet=True):
  
     return result
 
+# Defined this class to support verbose help on argument error.
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+
 # Main
-if __name__ == "__main__":
-
-    # Defined this class to support verbose help on argument error.
-    class MyParser(argparse.ArgumentParser):
-        def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
-            self.print_help()
-            sys.exit(2)
-
-    def exit_prog(msg):
-        print(msg)
-        sys.exit(1)
-
+def main():
     try:
         # Specify arguments.
         parser = MyParser(description=__doc__)
@@ -156,3 +161,6 @@ if __name__ == "__main__":
         parser.print_help()
 
         sys.exit(1)
+
+if __name__ == "__main__":
+    main()
