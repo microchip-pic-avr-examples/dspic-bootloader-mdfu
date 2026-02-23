@@ -10,7 +10,7 @@
         "shortDescription": "This MPLAB® X IDE example demonstrates how to perform secure boot authentication and secure firmware upgrade via UART with Microchip Device Firmware Update Protocol (MDFU) and hybrid verification using ML-DSA and ECDSA within MCC Melody.",
         "ide": {
             "name": "MPLABX",
-            "semverRange": ">=6.30.0"
+            "semverRange": ">=6.25.0"
         },
         "compiler": {
             "name": "XCDSC",
@@ -18,7 +18,7 @@
         },
         "dfp": {
             "name": "dsPIC33AK-MP_DFP",
-            "semverRange": ">=1.2.135"
+            "semverRange": ">=1.0.81"
         },
         "configurator": {
             "name": "MCC",
