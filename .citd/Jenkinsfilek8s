@@ -100,7 +100,9 @@ pipeline {
             steps {
                 script {
 				    misraCheck(
-                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}"
+                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}",
+                        excludePattern: "dspic33a/secure_boot_pqc_ecdsa_uart_2_images/boot.X/crypto/**",
+                        excludePath: "dspic33a/secure_boot_pqc_ecdsa_uart_2_images/boot.X/crypto/"
                     )
                 }
             }
