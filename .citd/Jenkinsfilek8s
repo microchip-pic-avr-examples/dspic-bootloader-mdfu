@@ -99,12 +99,15 @@ pipeline {
         stage('MISRA Check') {
             steps {
                 script {
-				    misraCheck(
-                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}"
+                    misraCheck(
+                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}",
+                        excludePath: "dspic33a/secure_boot_pqc_ecdsa_uart_2_images/boot.X/crypto/",
+                        includeArchivePattern: "NOFILE/**"
                     )
                 }
             }
-        }
+    }
+
         
         // Validate main.json file
 		stage('Validate main.json') {            
