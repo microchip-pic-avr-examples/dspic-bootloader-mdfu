@@ -100,7 +100,8 @@ pipeline {
             steps {
                 script {
                     misraCheck(
-                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}"
+                        sourceProjectPath: "${env.MPLABX_PROJECT_SOURCE}",
+                        includeArchivePattern: "NOFILE/**"
                     )
                 }
             }
