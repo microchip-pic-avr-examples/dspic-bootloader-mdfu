@@ -49,10 +49,14 @@ Copyright (c) [2012-2024] Microchip Technology Inc.
 #include "mdfu_reset.h"
 #include "mdfu_config.h"
 #include "critical_region.h"
+
+/* Included from the ../bsp project include path */
 #include "s3.h"
 #include "led0.h"
 #include "led1.h"
-#include "../mcc_generated_files/uart/uart1.h"
+
+/* Included from the ../mcc_generated_files/uart project include path */
+#include "uart1.h"
 
 /* Included from the ../mcc_generated_files/system project include path */
 #include "interrupt.h"

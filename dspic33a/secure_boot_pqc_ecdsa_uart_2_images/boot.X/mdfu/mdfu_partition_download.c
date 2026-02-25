@@ -240,7 +240,7 @@ static enum MDFU_PARTITION_STATUS Hash(enum MDFU_PARTITION_HASH_ALGORITHM algori
         returnCode = MDFU_PARTITION_STATUS_INVALID_ARGUMENT;
     } else {
         uint8_t* hashAddress = (uint8_t*) (&DOWNLOAD_MEMORY[offset]);
-        crypto_Hash_Algo_E cryptoHashAlgorithm = (algorithm == MDFU_PARTITION_HASH_ALGORITHM_SHA2_384 ? CRYPTO_HASH_SHA2_384 : CRYPTO_HASH_SHA2_512);
+        crypto_Hash_Algo_E cryptoHashAlgorithm = ((algorithm == MDFU_PARTITION_HASH_ALGORITHM_SHA2_384) ? CRYPTO_HASH_SHA2_384 : CRYPTO_HASH_SHA2_512);
         if (Crypto_Hash_Sha_Digest(CRYPTO_HANDLER_HW_INTERNAL, hashAddress, length, digest, cryptoHashAlgorithm, 1U) == CRYPTO_HASH_SUCCESS) {
             returnCode = MDFU_PARTITION_STATUS_SUCCESS;
         }
@@ -264,9 +264,9 @@ static bool ArgumentsAreInvalid(uint32_t offset, uint32_t length, void const * c
     const uint32_t endOffset = offset + length;
 
     return  ((NULL == pointer) ||
-            (offset >= MDFU_CONFIG_PARTITION_SIZE) ||
-            (length > MDFU_CONFIG_PARTITION_SIZE) ||
-            (endOffset > MDFU_CONFIG_PARTITION_SIZE));
+            (offset >= (uint32_t)MDFU_CONFIG_PARTITION_SIZE) ||
+            (length > (uint32_t)MDFU_CONFIG_PARTITION_SIZE) ||
+            (endOffset > (uint32_t)MDFU_CONFIG_PARTITION_SIZE));
 } 
 
 /**

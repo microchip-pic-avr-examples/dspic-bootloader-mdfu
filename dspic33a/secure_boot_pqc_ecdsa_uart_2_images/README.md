@@ -41,8 +41,8 @@ The associated bootloader and application projects demonstrate the following:
     * **NOTE**: The commands may change depending on the version used. See the [pymdfu release history](https://pypi.org/project/pymdfu/#history) for details
 * [OpenSSL 3.5.0 or greater](https://www.openssl.org/)
 * [Cryptographic Accelerator Module (CAM) driver for dsPIC33AK512MPS512 version 1.3.0](https://github.com/microchip-pic-avr-examples/dspic33a-crypto-accelerator-module)
-* [WolfCrypt v5.8.0](https://github.com/wolfSSL/Microchip)
-    * **NOTE**: See boot.X for the wolfSSL License and EULA.
+* [WolfCrypt](https://github.com/wolfSSL/Microchip)
+    * **NOTE**: See boot.X for the wolfSSL License, EULA, and version information used for demo.
 
 ### Hardware
 * [dsPIC33AK512MPS512 DIM (EV80L65A)](https://www.microchip.com/EV80L65A)
