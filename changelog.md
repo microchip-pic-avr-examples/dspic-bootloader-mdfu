@@ -1,3 +1,19 @@
+# dsPIC Bootloader MDFU v1.3.0
+### Release Highlights
+
+* [New Feature] - Added demo PQC+ECDSA secure boot demo for dsPIC33AK256MPS306 using hardware PQC acceleration.
+* [New Feature] - Updated the Cryptographic Accelerator Module driver to latest version (v1.4) for all demos.
+* [Bug Fix] - Corrected program memory end address in CRC demo documentation diagram.
+* [Bug Fix] - Configurations bits in the MCC configuration did not match the demo code. Corrected MCC configuration..
+* [Bug Fix] - Updates post build scripts to support XC-DSC 3.30+ changes in objcopy, now requiring a path to the target device DFP.
+* [Bug Fix] - Added shebang to pre/post build scripts for Linux/Mac based systems.
+* [Bug Fix] - Added .gitattributes to specify required line endings for .bat/.sh files.
+
+### Features Added\Updated
+
+* [New Feature] - Added demo PQC+ECDSA secure boot demo for dsPIC33AK256MPS306 using hardware PQC acceleration.
+* [New Feature] - Updated the Cryptographic Accelerator Module driver to latest version (v1.4) for all demos
+
 # dsPIC Bootloader MDFU v1.2.0
 ### Release Highlights
 
